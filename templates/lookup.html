@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Find a Booking · ReelVault Cinema{% endblock %}
+{% block content %}
+<section class="lookup-wrap">
+  <div class="lookup-art"><div class="lookup-circle">RV<span>.</span></div><span class="eyebrow">YOUR TICKET, FOUND</span><h1>Every booking<br>has a <em>paper trail.</em></h1><p>Use the numeric database ID from your confirmation page and the same email address used at booking.</p></div>
+  <form method="post" class="lookup-form panel"><span class="eyebrow">BOOKING LOOKUP</span><h2>Find your ticket</h2><label for="booking_id">Booking ID</label><input id="booking_id" name="booking_id" inputmode="numeric" placeholder="e.g. 12" required>
+  <label for="email">Booking email</label><input id="email" type="email" name="email" placeholder="you@example.com" required>
+  <button class="btn btn-primary btn-wide" type="submit">Retrieve booking <span>↗</span></button><p class="fine-print">Sample booking IDs are available in the Reports page for demonstration. The email must match as well.</p></form>
+</section>
+{% endblock %}

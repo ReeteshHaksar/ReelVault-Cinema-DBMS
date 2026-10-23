@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Booking #{{ booking.booking_id }} · ReelVault Cinema{% endblock %}
+{% block content %}
+<section class="ticket-page">
+  {% if newly_booked %}<div class="success-heading"><span class="success-icon">✓</span><div><span class="eyebrow">BOOKING SAVED</span><h1>Your seats are <em>locked in.</em></h1><p>The booking, seat tickets and simulated payment were committed to the database.</p></div></div>{% else %}<div class="page-intro compact-intro"><span class="eyebrow">BOOKING DETAILS</span><h1>Your ticket <em>pass.</em></h1><p>Keep the booking ID and email address handy for lookup or cancellation.</p></div>{% endif %}
+  <div class="ticket-card">
+    <div class="ticket-main">
+      <div class="ticket-topline"><span class="ticket-brand">REELVAULT<span>.</span></span><span class="status-pill status-{{ booking.status|lower }}">{{ booking.status }}</span></div>
+      <div class="ticket-movie"><div class="ticket-mini-poster"><span>RV</span></div><div><span class="eyebrow">ADMIT {{ tickets|length }} · {{ booking.screen_name|upper }}</span><h2>{{ booking.title }}</h2><p>{{ booking.language }} · {{ booking.duration_minutes }} min</p></div></div>
+      <div class="ticket-info-grid"><div><span>DATE</span><strong>{{ booking.show_date|pretty_date }}</strong></div><div><span>SHOWTIME</span><strong>{{ booking.start_time|pretty_time }}</strong></div><div><span>SCREEN</span><strong>{{ booking.screen_name }}</strong></div><div><span>SEATS</span><strong>{% for ticket in tickets if ticket.status == 'BOOKED' %}{{ ticket.seat_number }}{% if not loop.last %}, {% endif %}{% else %}Cancelled{% endfor %}</strong></div></div>
+      <div class="ticket-cut"></div>
+      <div class="ticket-bottom-info"><div><span>BOOKING ID</span><strong class="booking-number">RV-{{ '%06d'|format(booking.booking_id) }}</strong><small>Database ID: {{ booking.booking_id }}</small></div><div class="ticket-total"><span>TOTAL PAID</span><strong>{{ booking.total_amount|inr }}</strong><small>{{ booking.payment_method or 'Not recorded' }} · {{ booking.payment_status or 'N/A' }}</small></div></div>
+    </div>
+    <aside class="ticket-stub"><div class="stub-dots"></div><span class="eyebrow">CUSTOMER</span><h3>{{ booking.full_name }}</h3><p>{{ booking.email }}</p><p>{{ booking.phone }}</p><div class="barcode" aria-label="Decorative ticket barcode"></div><span class="stub-ref">{{ booking.transaction_ref or 'NO TRANSACTION' }}</span><p class="stub-note">This is a demo ticket. Payment processing is simulated.</p></aside>
+  </div>
+  <div class="ticket-actions"><a href="{{ url_for('index') }}" class="btn btn-primary">Browse more films <span>↗</span></a><a href="{{ url_for('lookup_booking') }}" class="btn btn-secondary">Find another booking</a></div>
+  {% if booking.status == 'CONFIRMED' %}
+    <details class="cancel-details"><summary>Cancel this booking</summary><div><p>Cancellation frees the selected seats and marks the simulated payment as refunded. Enter the email used for this booking.</p><form method="post" action="{{ url_for('cancel_booking', booking_id=booking.booking_id) }}" class="cancel-form"><input type="email" name="email" placeholder="Booking email" required><button class="btn btn-danger" type="submit">Cancel booking</button></form></div></details>
+  {% endif %}
+</section>
+{% endblock %}

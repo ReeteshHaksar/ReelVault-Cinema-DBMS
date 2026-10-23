@@ -1,0 +1,60 @@
+digraph CinemaERD {
+  graph [rankdir=LR, splines=ortho, nodesep=0.52, ranksep=0.85, pad=0.24, bgcolor="#ffffff", fontname="Arial", label="REELVAULT CINEMA  |  ENTITY-RELATIONSHIP DIAGRAM", labelloc=t, fontsize=20, fontcolor="#24272a"];
+  node [shape=plain, fontname="Arial", fontsize=10];
+  edge [color="#777d72", penwidth=1.3, arrowsize=0.7, fontname="Arial", fontsize=9, fontcolor="#59604f"];
+
+  movies [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" COLOR="#9eae58">
+      <TR><TD BGCOLOR="#d8f36a"><B>MOVIES</B></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>PK</B> movie_id</TD></TR><TR><TD ALIGN="LEFT">title</TD></TR><TR><TD ALIGN="LEFT">genre, language</TD></TR><TR><TD ALIGN="LEFT">duration_minutes</TD></TR><TR><TD ALIGN="LEFT">certificate, release_date</TD></TR><TR><TD ALIGN="LEFT">description</TD></TR>
+    </TABLE>>];
+  screens [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" COLOR="#b6b8b0">
+      <TR><TD BGCOLOR="#292d31"><FONT COLOR="white"><B>SCREENS</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>PK</B> screen_id</TD></TR><TR><TD ALIGN="LEFT">screen_name (UNIQUE)</TD></TR><TR><TD ALIGN="LEFT">total_seats</TD></TR>
+    </TABLE>>];
+  seats [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" COLOR="#b6b8b0">
+      <TR><TD BGCOLOR="#292d31"><FONT COLOR="white"><B>SEATS</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>PK</B> seat_id</TD></TR><TR><TD ALIGN="LEFT"><B>FK</B> screen_id</TD></TR><TR><TD ALIGN="LEFT">seat_number</TD></TR><TR><TD ALIGN="LEFT">seat_type</TD></TR><TR><TD ALIGN="LEFT">UNIQUE(screen_id, seat_number)</TD></TR>
+    </TABLE>>];
+  shows [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" COLOR="#9eae58">
+      <TR><TD BGCOLOR="#d8f36a"><B>SHOWS</B></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>PK</B> show_id</TD></TR><TR><TD ALIGN="LEFT"><B>FK</B> movie_id</TD></TR><TR><TD ALIGN="LEFT"><B>FK</B> screen_id</TD></TR><TR><TD ALIGN="LEFT">show_date, start_time</TD></TR><TR><TD ALIGN="LEFT">base_price, status</TD></TR><TR><TD ALIGN="LEFT">UNIQUE(screen, date, time)</TD></TR>
+    </TABLE>>];
+  customers [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" COLOR="#b6b8b0">
+      <TR><TD BGCOLOR="#292d31"><FONT COLOR="white"><B>CUSTOMERS</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>PK</B> customer_id</TD></TR><TR><TD ALIGN="LEFT">full_name</TD></TR><TR><TD ALIGN="LEFT">email (UNIQUE)</TD></TR><TR><TD ALIGN="LEFT">phone</TD></TR>
+    </TABLE>>];
+  bookings [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" COLOR="#9eae58">
+      <TR><TD BGCOLOR="#d8f36a"><B>BOOKINGS</B></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>PK</B> booking_id</TD></TR><TR><TD ALIGN="LEFT"><B>FK</B> customer_id</TD></TR><TR><TD ALIGN="LEFT"><B>FK</B> show_id</TD></TR><TR><TD ALIGN="LEFT">booking_time, status</TD></TR><TR><TD ALIGN="LEFT">total_amount</TD></TR>
+    </TABLE>>];
+  tickets [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" COLOR="#b6b8b0">
+      <TR><TD BGCOLOR="#292d31"><FONT COLOR="white"><B>TICKETS</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>PK</B> ticket_id</TD></TR><TR><TD ALIGN="LEFT"><B>FK</B> booking_id</TD></TR><TR><TD ALIGN="LEFT"><B>FK</B> show_id, seat_id</TD></TR><TR><TD ALIGN="LEFT">seat_price, status</TD></TR><TR><TD ALIGN="LEFT">UNIQUE active (show, seat)</TD></TR>
+    </TABLE>>];
+  payments [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" COLOR="#b6b8b0">
+      <TR><TD BGCOLOR="#292d31"><FONT COLOR="white"><B>PAYMENTS</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>PK</B> payment_id</TD></TR><TR><TD ALIGN="LEFT"><B>FK, UNIQUE</B> booking_id</TD></TR><TR><TD ALIGN="LEFT">amount, payment_method</TD></TR><TR><TD ALIGN="LEFT">payment_status</TD></TR><TR><TD ALIGN="LEFT">transaction_ref (UNIQUE)</TD></TR>
+    </TABLE>>];
+
+  movies -> shows [label="1 : N"];
+  screens -> shows [label="1 : N"];
+  screens -> seats [label="1 : N"];
+  customers -> bookings [label="1 : N"];
+  shows -> bookings [label="1 : N"];
+  bookings -> tickets [label="1 : N"];
+  shows -> tickets [label="1 : N"];
+  seats -> tickets [label="1 : N"];
+  bookings -> payments [label="1 : 1"];
+
+  {rank=same; movies; screens; customers;}
+  {rank=same; shows; seats; bookings;}
+  {rank=same; tickets; payments;}
+}

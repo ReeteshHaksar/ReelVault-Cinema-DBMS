@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Movies and Showtimes · ReelVault Cinema{% endblock %}
+{% block content %}
+<section class="hero-grid">
+  <div class="hero-copy">
+    <div class="eyebrow"><span class="live-pulse"></span> THE BIG SCREEN, BOOKED BETTER</div>
+    <h1>Your next<br><em>great story</em><br>starts here.</h1>
+    <p>Pick a film, choose your seats, and get your ticket in seconds. Every booking is stored and checked against the cinema database in real time.</p>
+    <div class="hero-actions"><a class="btn btn-primary" href="#now-showing">Explore movies <span>↘</span></a><a class="text-link" href="{{ url_for('reports') }}">View system reports <span>↗</span></a></div>
+    <div class="hero-stats"><div><strong>{{ movies|length }}</strong><span>Films listed</span></div><div><strong>3</strong><span>Digital screens</span></div><div><strong>14 days</strong><span>Show schedule</span></div></div>
+  </div>
+  <div class="hero-art" aria-label="Abstract cinema artwork">
+    <div class="art-glow"></div><div class="ticket-art"><span class="ticket-kicker">YOUR SEAT IS WAITING</span><div class="ticket-reel">R<span>V</span></div><div class="ticket-line"></div><span class="ticket-genre">DRAMA · THRILLER · SCI-FI</span><div class="ticket-bottom"><span>ADMIT ONE</span><span>RV / 2026</span></div></div>
+    <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div><span class="art-caption">STORIES WORTH SHOWING UP FOR.</span>
+  </div>
+</section>
+
+<section class="section-heading" id="now-showing">
+  <div><span class="eyebrow">ON THE SCREEN</span><h2>Now showing <span class="muted-slash">/</span> next up</h2></div>
+  <div class="heading-side"><span class="tiny-label">LIVE SCHEDULE</span><strong>{{ show_count }} upcoming show slots</strong></div>
+</section>
+
+<div class="filter-row" aria-label="Filter films by genre">
+  <button type="button" class="filter-chip active" data-genre="all">All films</button>
+  {% for genre in movies|map(attribute='genre')|unique|sort %}<button type="button" class="filter-chip" data-genre="{{ genre|lower }}">{{ genre }}</button>{% endfor %}
+</div>
+
+<section class="movie-grid">
+  {% for movie in movies %}
+    <article class="movie-card" data-movie-genre="{{ movie.genre|lower }}">
+      <div class="poster poster-{{ loop.index0 % 6 }}">
+        <span class="poster-tag">{{ movie.certificate }}</span>
+        <span class="poster-lines"></span><span class="poster-symbol">{% if movie.genre == 'Sci-Fi' %}◎{% elif movie.genre == 'Thriller' %}◈{% elif movie.genre == 'Drama' %}◌{% elif movie.genre == 'Family' %}✳{% elif movie.genre == 'Comedy' %}✦{% else %}⌁{% endif %}</span>
+        <div class="poster-title"><span>REELVAULT ORIGINAL</span><h3>{{ movie.title }}</h3><small>{{ movie.genre|upper }}</small></div>
+        <div class="poster-grain"></div>
+      </div>
+      <div class="movie-info">
+        <div class="movie-meta"><span>{{ movie.language }}</span><span class="meta-sep">·</span><span>{{ movie.duration_minutes }} min</span><span class="meta-sep">·</span><span>{{ movie.certificate }}</span></div>
+        <h3>{{ movie.title }}</h3>
+        <p class="movie-description">{{ movie.description }}</p>
+        <div class="showtime-label"><span>UPCOMING SHOWTIMES</span><span>{{ (shows_by_movie.get(movie.movie_id, [])|length) }} listed</span></div>
+        {% set movie_shows = shows_by_movie.get(movie.movie_id, []) %}
+        {% if movie_shows %}
+          <div class="showtime-list">
+            {% for show in movie_shows[:5] %}
+              <a class="showtime-pill" href="{{ url_for('book_show', show_id=show.show_id) }}" title="Book {{ movie.title }} on {{ show.show_date }} at {{ show.start_time }}">
+                <span class="show-date">{{ show.show_date|pretty_date }}</span><strong>{{ show.start_time|pretty_time }}</strong><span class="show-price">{{ show.base_price|inr }}+</span><span class="pill-arrow">↗</span>
+              </a>
+            {% endfor %}
+          </div>
+        {% else %}<div class="empty-inline">No upcoming slots. Check back after scheduling.</div>{% endif %}
+      </div>
+    </article>
+  {% endfor %}
+</section>
+
+<section class="how-section">
+  <div><span class="eyebrow">THREE STEPS. NO QUEUE.</span><h2>From seat map<br>to screen-ready.</h2></div>
+  <div class="steps-grid"><div class="step"><span>01</span><h3>Choose a show</h3><p>Compare dates, times and base ticket prices.</p></div><div class="step"><span>02</span><h3>Pick your seats</h3><p>Unavailable seats are marked from live database records.</p></div><div class="step"><span>03</span><h3>Get your ticket</h3><p>A booking, ticket rows and simulated payment are saved in one transaction.</p></div></div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+  document.querySelectorAll('[data-genre]').forEach(button => {
+    button.addEventListener('click', () => {
+      document.querySelectorAll('[data-genre]').forEach(item => item.classList.remove('active'));
+      button.classList.add('active');
+      const genre = button.dataset.genre;
+      document.querySelectorAll('[data-movie-genre]').forEach(card => {
+        card.hidden = genre !== 'all' && card.dataset.movieGenre !== genre;
+      });
+    });
+  });
+</script>
+{% endblock %}

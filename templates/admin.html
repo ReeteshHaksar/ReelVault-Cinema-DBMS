@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Admin Console · ReelVault Cinema{% endblock %}
+{% block content %}
+<section class="page-intro admin-intro"><span class="eyebrow">CONTROL ROOM / DATABASE OPERATIONS</span><h1>Manage the <em>show.</em></h1><p>Add and update movie records, schedule shows and cancel a show. The SQL constraints intentionally prevent deleting records that other tables still reference.</p><div class="demo-warning"><strong>Academic demo only</strong><span>This admin page has no login. Run it locally for evaluation; do not deploy this prototype publicly as-is.</span></div></section>
+<section class="admin-stats"><div><span>FILM RECORDS</span><strong>{{ movies|length }}</strong></div><div><span>SCREENS</span><strong>{{ screens|length }}</strong></div><div><span>SHOW RECORDS SHOWN</span><strong>{{ shows|length }}</strong></div><div><span>DATABASE</span><strong>SQLite</strong></div></section>
+<section class="admin-section" id="movies"><div class="section-heading compact-heading"><div><span class="eyebrow">CREATE / READ / UPDATE / DELETE</span><h2>Movie catalogue</h2></div><span class="data-tag">TABLE: movies</span></div>
+  <div class="admin-columns">
+    <form class="panel admin-form" action="{{ url_for('admin_add_movie') }}" method="post"><span class="eyebrow">INSERT A NEW RECORD</span><h3>Add movie</h3>
+      <label>Title<input name="title" required maxlength="120" placeholder="Movie title"></label>
+      <div class="form-row"><label>Genre<input name="genre" required placeholder="Drama"></label><label>Language<input name="language" required placeholder="Hindi"></label></div>
+      <div class="form-row"><label>Duration (minutes)<input name="duration_minutes" type="number" min="1" max="500" required value="120"></label><label>Certificate<select name="certificate"><option>U</option><option selected>UA</option><option>A</option></select></label></div>
+      <label>Release date<input name="release_date" type="date"></label>
+      <label>Synopsis<textarea name="description" rows="3" placeholder="Short movie description"></textarea></label>
+      <button class="btn btn-primary btn-wide" type="submit">Insert movie <span>＋</span></button>
+    </form>
+    <div class="movie-admin-list">
+      {% for movie in movies %}<article class="panel admin-movie-row"><div class="admin-movie-top"><div class="mini-poster admin-poster"><span>{{ loop.index|string }}</span></div><div><span class="data-tag">MOVIE #{{ movie.movie_id }}</span><h3>{{ movie.title }}</h3><p>{{ movie.genre }} · {{ movie.language }} · {{ movie.duration_minutes }} min</p></div></div>
+        <form class="admin-edit-form" method="post" action="{{ url_for('admin_update_movie', movie_id=movie.movie_id) }}"><div class="form-row"><label>Title<input name="title" value="{{ movie.title }}" required></label><label>Duration<input type="number" name="duration_minutes" value="{{ movie.duration_minutes }}" min="1" required></label></div><div class="form-row"><label>Genre<input name="genre" value="{{ movie.genre }}" required></label><label>Language<input name="language" value="{{ movie.language }}" required></label></div><label>Synopsis<textarea name="description" rows="2">{{ movie.description }}</textarea></label><button class="btn btn-secondary btn-small" type="submit">Save changes</button></form>
+        <form method="post" action="{{ url_for('admin_delete_movie', movie_id=movie.movie_id) }}" onsubmit="return confirm('Delete this movie only if no show references it?');"><button class="delete-link" type="submit">Delete unused movie ↗</button></form>
+      </article>{% endfor %}
+    </div>
+  </div>
+</section>
+<section class="admin-section" id="shows"><div class="section-heading compact-heading"><div><span class="eyebrow">SCHEDULE / CANCEL</span><h2>Show management</h2></div><span class="data-tag">TABLE: shows</span></div>
+  <form class="panel show-create-form" method="post" action="{{ url_for('admin_add_show') }}"><div><span class="eyebrow">INSERT A SHOW</span><h3>Schedule a new screening</h3></div><label>Movie<select name="movie_id" required>{% for movie in movies %}<option value="{{ movie.movie_id }}">{{ movie.title }}</option>{% endfor %}</select></label><label>Screen<select name="screen_id" required>{% for screen in screens %}<option value="{{ screen.screen_id }}">{{ screen.screen_name }}</option>{% endfor %}</select></label><label>Date<input type="date" name="show_date" min="{{ current_date }}" value="{{ tomorrow_date }}" required></label><label>Start time<input type="time" name="start_time" required value="10:30"></label><label>Base price (₹)<input type="number" name="base_price" min="0" step="10" value="180" required></label><button class="btn btn-primary" type="submit">Add show <span>＋</span></button></form>
+  <div class="panel show-table-panel"><div class="table-wrap"><table class="wide-table"><thead><tr><th>SHOW ID</th><th>FILM / SCREEN</th><th>DATE</th><th>TIME</th><th>PRICE</th><th>STATUS</th><th>ACTION</th></tr></thead><tbody>
+  {% for show in shows %}<tr><td>#{{ show.show_id }}</td><td><strong>{{ show.title }}</strong><small>{{ show.screen_name }}</small></td><td>{{ show.show_date|pretty_date }}</td><td>{{ show.start_time|pretty_time }}</td><td>{{ show.base_price|inr }}+</td><td><span class="status-pill status-{{ show.status|lower }}">{{ show.status }}</span></td><td>{% if show.status == 'SCHEDULED' %}<form method="post" action="{{ url_for('admin_cancel_show', show_id=show.show_id) }}" onsubmit="return confirm('Cancel this show and mark its active tickets as cancelled/refunded in the demo database?');"><button class="table-action" type="submit">Cancel show</button></form>{% else %}<span class="table-muted">Archived</span>{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div></div>
+</section>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Database Reports · ReelVault Cinema{% endblock %}
+{% block content %}
+<section class="page-intro reports-intro"><span class="eyebrow">DATABASE INTELLIGENCE / 01</span><h1>The numbers behind<br>the <em>movie night.</em></h1><p>These summaries are calculated from live SQLite tables with joins, grouped aggregates and subqueries. Book a ticket or cancel one, then refresh to see the data change.</p></section>
+<section class="metrics-grid">
+  <article class="metric-card metric-dark"><span>CONFIRMED BOOKINGS</span><strong>{{ metrics.confirmed_bookings }}</strong><small>Bookings not cancelled</small><span class="metric-symbol">↗</span></article>
+  <article class="metric-card"><span>SEATS SOLD</span><strong>{{ metrics.seats_sold }}</strong><small>Active tickets in the database</small><span class="metric-symbol">▦</span></article>
+  <article class="metric-card"><span>GROSS COLLECTION</span><strong>{{ metrics.gross_collection|inr }}</strong><small>Payments marked PAID</small><span class="metric-symbol">₹</span></article>
+  <article class="metric-card"><span>SCHEDULED SHOWS</span><strong>{{ metrics.scheduled_shows }}</strong><small>Across {{ metrics.movie_count }} films</small><span class="metric-symbol">◷</span></article>
+</section>
+<section class="report-grid">
+  <article class="panel report-panel revenue-panel"><div class="panel-heading"><div><span class="eyebrow">AGGREGATE / GROUP BY</span><h2>Film performance</h2></div><span class="data-tag">SQL Q7</span></div>
+    <p class="panel-desc">Confirmed bookings, active seats and ticket revenue grouped by movie.</p>
+    {% for film in film_stats %}
+      <div class="revenue-row"><div class="revenue-label"><strong>{{ film.title }}</strong><span>{{ film.bookings }} bookings · {{ film.seats_sold }} seats</span></div><strong class="revenue-value">{{ film.revenue|inr }}</strong><div class="bar-track"><div class="bar-fill" style="width: {{ (100 if max_revenue > 0 and film.revenue == max_revenue else (film.revenue / max_revenue * 100 if max_revenue > 0 else 0))|round(1) }}%"></div></div></div>
+    {% endfor %}
+  </article>
+  <article class="panel report-panel recent-panel"><div class="panel-heading"><div><span class="eyebrow">JOIN / ORDER BY</span><h2>Recent bookings</h2></div><span class="data-tag">SQL Q6</span></div>
+    {% if recent %}<div class="table-wrap"><table><thead><tr><th>ID / CUSTOMER</th><th>FILM</th><th>AMOUNT</th><th>STATUS</th></tr></thead><tbody>
+    {% for booking in recent %}<tr><td><strong>#{{ booking.booking_id }}</strong><small>{{ booking.full_name }}</small></td><td>{{ booking.title }}<small>{{ booking.show_date|pretty_date }} · {{ booking.start_time|pretty_time }}</small></td><td>{{ booking.total_amount|inr }}</td><td><span class="status-pill status-{{ booking.status|lower }}">{{ booking.status }}</span><small>{{ booking.payment_status or 'No payment' }}</small></td></tr>{% endfor %}
+    </tbody></table></div>{% else %}<p class="empty-state">No bookings have been created yet.</p>{% endif %}
+  </article>
+</section>
+<section class="panel occupancy-panel"><div class="panel-heading"><div><span class="eyebrow">LEFT JOIN / COUNT / CAPACITY</span><h2>Show occupancy</h2></div><span class="data-tag">SQL Q8</span></div><p class="panel-desc">The first 24 scheduled shows. Occupancy is active tickets divided by the screen's total seats.</p>
+  <div class="table-wrap"><table class="wide-table"><thead><tr><th>SHOW</th><th>DATE / TIME</th><th>SCREEN</th><th>BOOKED</th><th>AVAILABLE</th><th>OCCUPANCY</th></tr></thead><tbody>
+  {% for show in occupancy %}<tr><td><strong>{{ show.title }}</strong><small>Show #{{ show.show_id }}</small></td><td>{{ show.show_date|pretty_date }}<small>{{ show.start_time|pretty_time }}</small></td><td>{{ show.screen_name }}</td><td>{{ show.booked_seats }} / {{ show.total_seats }}</td><td>{{ show.available_seats }}</td><td><div class="occupancy-cell"><div class="occupancy-track"><span style="width: {{ show.occupancy_pct }}%"></span></div><strong>{{ show.occupancy_pct }}%</strong></div></td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+<section class="sql-callout"><div><span class="eyebrow">WHY THIS PAGE MATTERS</span><h2>Not just tables.<br><em>Useful answers.</em></h2></div><p>The database computes revenue by film, active seats per show, recent customer bookings and screen occupancy. These are the same kinds of questions a cinema operator needs answered before deciding which showtimes to promote or which screen to allocate.</p><a class="btn btn-secondary" href="{{ url_for('admin') }}">Open admin tools <span>↗</span></a></section>
+{% endblock %}

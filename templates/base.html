@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ReelVault Cinema movie ticket booking and database management mini-project.">
+  <title>{% block title %}ReelVault Cinema{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="{{ url_for('index') }}" aria-label="ReelVault home">
+        <span class="brand-mark"><span></span><span></span><span></span></span>
+        <span>reelvault<span class="brand-dot">.</span><small>CINEMA / DATABASE SYSTEM</small></span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">Movies</a>
+        <a href="{{ url_for('lookup_booking') }}" class="{% if request.endpoint in ['lookup_booking', 'booking_detail'] %}active{% endif %}">My tickets</a>
+        <a href="{{ url_for('reports') }}" class="{% if request.endpoint == 'reports' %}active{% endif %}">Reports</a>
+        <a href="{{ url_for('admin') }}" class="nav-admin {% if request.endpoint and request.endpoint.startswith('admin') %}active{% endif %}">Admin</a>
+      </nav>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}<div class="flash-stack" role="status">
+        {% for category, message in messages %}<div class="flash flash-{{ category }}"><span class="flash-dot"></span>{{ message }}</div>{% endfor %}
+      </div>{% endif %}
+    {% endwith %}
+
+    <main>{% block content %}{% endblock %}</main>
+    <footer class="footer">
+      <div><span class="footer-brand">REELVAULT<span>.</span></span><span>DBMS mini-project · Cinema Hall Ticket Booking</span></div>
+      <span>Academic prototype · {{ current_year }}</span>
+    </footer>
+  </div>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

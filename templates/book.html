@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Choose Seats · {{ show.title }}{% endblock %}
+{% block content %}
+<div class="page-intro compact-intro"><a class="back-link" href="{{ url_for('index') }}">← Back to movies</a><span class="eyebrow">RESERVE YOUR SEATS</span><h1>Make it a <em>movie night.</em></h1><p>Seat availability comes directly from the database. A booked seat cannot be sold twice, because the database is doing the one job humans keep inventing new ways to mess up.</p></div>
+<section class="booking-layout">
+  <div class="seat-panel panel">
+    <div class="panel-head"><div><span class="eyebrow">STEP 01 / SEAT MAP</span><h2>{{ show.title }}</h2><p>{{ show.show_date|pretty_date }} · {{ show.start_time|pretty_time }} · {{ show.screen_name }}</p></div><div class="certificate-badge">{{ show.certificate }}</div></div>
+    <div class="screen-visual"><span>SCREEN THIS WAY</span><div class="screen-curve"></div></div>
+    <div class="seat-legend"><span><i class="legend-seat available"></i>Available</span><span><i class="legend-seat selected"></i>Selected</span><span><i class="legend-seat booked"></i>Booked</span><span><i class="legend-seat premium"></i>Premium</span><span><i class="legend-seat recliner"></i>Recliner</span></div>
+    <form method="post" id="booking-form">
+      <div class="seat-map">
+        {% for row_name in 'ABCDEF' %}
+          <div class="seat-row"><span class="row-letter">{{ row_name }}</span><div class="row-seats">
+            {% for seat in seats if seat.seat_number[0] == row_name %}
+              {% set extra = seat_surcharges[seat.seat_type] %}
+              <label class="seat-label seat-{{ seat.seat_type|lower }} {% if seat.is_booked %}seat-taken{% endif %}" title="{{ seat.seat_number }} · {{ seat.seat_type|title }} · {{ (show.base_price + extra)|inr }}">
+                <input type="checkbox" name="seat_ids" value="{{ seat.seat_id }}" data-price="{{ show.base_price + extra }}" data-seat="{{ seat.seat_number }}" {% if seat.is_booked %}disabled{% endif %}>
+                <span>{{ seat.seat_number[1:] }}</span>
+              </label>
+            {% endfor %}
+          </div><span class="row-letter row-end">{{ row_name }}</span></div>
+        {% endfor %}
+      </div>
+      <div class="seat-note"><span>ⓘ</span>Rows A-D regular · Row E premium (+₹50) · Row F recliner (+₹120)</div>
+    </form>
+  </div>
+  <aside class="checkout-panel panel">
+    <span class="eyebrow">STEP 02 / YOUR DETAILS</span><h2>Booking summary</h2>
+    <div class="summary-film"><div class="mini-poster"><span>RV</span></div><div><strong>{{ show.title }}</strong><span>{{ show.show_date|pretty_date }} · {{ show.start_time|pretty_time }}</span><span>{{ show.screen_name }} · {{ show.language }}</span></div></div>
+    <div class="summary-line"><span>Selected seats</span><strong id="selected-seats-text">None yet</strong></div>
+    <div class="summary-line"><span>Seat count</span><strong id="seat-count">0</strong></div>
+    <div class="summary-line total-line"><span>Estimated total</span><strong id="booking-total">₹0</strong></div>
+    <div class="form-divider"></div>
+    <div class="form-fields">
+      <label for="full_name">Full name</label><input form="booking-form" type="text" id="full_name" name="full_name" placeholder="Your name" maxlength="100" required>
+      <label for="email">Email address</label><input form="booking-form" type="email" id="email" name="email" placeholder="you@example.com" maxlength="160" required>
+      <label for="phone">Phone number</label><input form="booking-form" type="tel" id="phone" name="phone" placeholder="10-digit mobile number" minlength="7" maxlength="20" required>
+      <label for="payment_method">Payment method <small>(simulated)</small></label><select form="booking-form" id="payment_method" name="payment_method"><option value="UPI">UPI</option><option value="CARD">Card</option><option value="CASH">Cash at counter</option></select>
+    </div>
+    <button type="submit" form="booking-form" class="btn btn-primary btn-wide" id="confirm-booking">Confirm booking <span>↗</span></button>
+    <p class="fine-print">Demo payment only. No real money is charged. Booking is saved only if the seats are still available.</p>
+  </aside>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+(() => {
+  const inputs = [...document.querySelectorAll('input[name="seat_ids"]:not(:disabled)')];
+  const seatText = document.getElementById('selected-seats-text');
+  const seatCount = document.getElementById('seat-count');
+  const total = document.getElementById('booking-total');
+  const confirm = document.getElementById('confirm-booking');
+  const money = value => new Intl.NumberFormat('en-IN', {style:'currency', currency:'INR', maximumFractionDigits:0}).format(value);
+  function update() {
+    const selected = inputs.filter(input => input.checked);
+    seatText.textContent = selected.length ? selected.map(input => input.dataset.seat).join(', ') : 'None yet';
+    seatCount.textContent = String(selected.length);
+    total.textContent = money(selected.reduce((sum, input) => sum + Number(input.dataset.price), 0));
+    confirm.disabled = selected.length < 1 || selected.length > 8;
+    confirm.innerHTML = selected.length ? `Confirm ${selected.length} seat${selected.length === 1 ? '' : 's'} <span>↗</span>` : 'Select seats to continue <span>↗</span>';
+  }
+  inputs.forEach(input => input.addEventListener('change', () => {
+    const checked = inputs.filter(item => item.checked);
+    if (checked.length > 8) { input.checked = false; alert('A maximum of 8 seats can be booked at once.'); }
+    update();
+  }));
+  update();
+})();
+</script>
+{% endblock %}
